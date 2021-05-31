@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+TARBALL_URL="https://registry.npmjs.org/husky/-/husky-$ASDF_INSTALL_VERSION.tgz"
+
+mkdir -p "$ASDF_INSTALL_PATH"
+
+echo "Downloading husky v$ASDF_INSTALL_VERSION"
+
+curl --silent --fail --show-error --location "$TARBALL_URL" |
+  tar xzf - --strip-components=1 --no-same-owner -C "$ASDF_INSTALL_PATH"
+
+BIN_PATH=$(
+  grep '"bin": ' "$ASDF_INSTALL_PATH/package.json" |
+  head -1 |
+  cut -d\" -f 4
+)
+
+[[ -z "$BIN_PATH" ]] && exit 1
+
+chmod +x "$ASDF_INSTALL_PATH/$BIN_PATH"
+
+mkdir -p "$ASDF_INSTALL_PATH/bin"
+
+ln -sf "$ASDF_INSTALL_PATH/$BIN_PATH" "$ASDF_INSTALL_PATH/bin/husky"
