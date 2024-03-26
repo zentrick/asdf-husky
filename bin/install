@@ -11,12 +11,13 @@ echo "Downloading husky v$ASDF_INSTALL_VERSION"
 curl --silent --fail --show-error --location "$TARBALL_URL" |
   tar xzf - --strip-components=1 --no-same-owner -C "$ASDF_INSTALL_PATH"
 
-# Get either "bin": "foo/bar.js" or "bin": { "husky": "foo/bar.js" }
-BIN_DESCRIPTOR=$( tr -d '\n' < "$ASDF_INSTALL_PATH/package.json" | grep -Eo '"bin":[^,]*' )
-# Extract the last quote-delimited string
-BIN_PATH=$( sed 's/.*"\([^"]*\)".*/\1/' <<< "$BIN_DESCRIPTOR" )
+# Parse out either { "bin": "file.js" } or { "bin": { "husky": "file.js" } }
+BIN_PATH=$(
+  tr -d '\n' < "$ASDF_INSTALL_PATH/package.json" |
+    sed -e 's/.*"bin" *: *\({[^}]*"husky" *: *\)\{0,1\}"\([^"]*\)".*/\2/'
+)
 
-[[ -z "$BIN_PATH" ]] && exit 1
+[[ -z "$BIN_PATH" || "$BIN_PATH" == *'{'* ]] && exit 1
 
 chmod +x "$ASDF_INSTALL_PATH/$BIN_PATH"
 
